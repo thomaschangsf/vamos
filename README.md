@@ -13,11 +13,14 @@ A Go project template with support for AWS, LLM, and web services.
 │       └── main.go    # SF entry point
 ├── internal/          # Private application and library code
 │   ├── aws/          # AWS client implementation
-│   │   └── client.go # AWS client code
+│   │   ├── client.go # AWS client code
+│   │   └── client_test.go # AWS tests
 │   ├── llm/          # LLM client implementation
-│   │   └── client.go # LLM client code
+│   │   ├── client.go # LLM client code
+│   │   └── client_test.go # LLM tests
 │   └── web/          # Web server implementation
-│       └── server.go # Web server code
+│       ├── server.go # Web server code
+│       └── server_test.go # Web tests
 ├── pkg/               # Public library code
 │   └── config/       # Configuration management
 │       └── config.go # Configuration code
@@ -86,13 +89,75 @@ A Go project template with support for AWS, LLM, and web services.
    WEB_BASE_URL=http://localhost:8080
    ```
 
+## Testing
+
+The project includes comprehensive tests for all internal packages. Tests use mocking to avoid external service dependencies.
+
+### Running Tests
+
+1. Install test dependencies:
+   ```bash
+   make setup
+   ```
+
+2. Run all tests:
+   ```bash
+   make test
+   ```
+
+3. Run tests with coverage:
+   ```bash
+   make coverage
+   ```
+
+4. Run specific package tests:
+   ```bash
+   # AWS tests
+   go test ./internal/aws
+
+   # LLM tests
+   go test ./internal/llm
+
+   # Web tests
+   go test ./internal/web
+   ```
+
+### Test Structure
+
+- **AWS Tests**:
+  - Tests S3 client functionality
+  - Mocks AWS SDK responses
+  - Tests bucket listing operations
+
+- **LLM Tests**:
+  - Tests OpenAI client functionality
+  - Mocks API responses
+  - Tests text generation
+
+- **Web Tests**:
+  - Tests HTTP endpoints
+  - Tests server startup and shutdown
+  - Tests health check endpoints
+
+### Test Coverage
+
+To generate and view test coverage:
+
+```bash
+# Generate coverage report
+make coverage
+
+# View coverage in browser
+open coverage.html
+```
+
 ## Running the Applications
 
 ### Running Midas
 
 1. Start the Midas application:
    ```bash
-   go run cmd/midas/main.go
+   make run-midas
    ```
 
 2. The application will:
@@ -105,7 +170,7 @@ A Go project template with support for AWS, LLM, and web services.
 
 1. Start the SF application:
    ```bash
-   go run cmd/sf/main.go
+   make run-sf
    ```
 
 2. The application will:
@@ -120,10 +185,10 @@ To build standalone binaries:
 
 ```bash
 # Build Midas
-go build -o bin/midas cmd/midas/main.go
+make build-midas
 
 # Build SF
-go build -o bin/sf cmd/sf/main.go
+make build-sf
 ```
 
 ## Development
@@ -134,25 +199,20 @@ go build -o bin/sf cmd/sf/main.go
 go get github.com/example/new-package
 ```
 
-### Running Tests
+### Code Quality
 
 ```bash
-go test ./...
+# Format code
+make fmt
+
+# Run linter
+make lint
+
+# Run security checks
+make security
 ```
 
-### Code Formatting
-
-```bash
-go fmt ./...
-```
-
-### Linting
-
-```bash
-go vet ./...
-```
-
-## API Endpoints
+### API Endpoints
 
 Both applications expose the following endpoints:
 

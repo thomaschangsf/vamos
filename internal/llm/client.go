@@ -2,23 +2,26 @@ package llm
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
 
+// OpenAIClientInterface defines the interface for OpenAI operations
+type OpenAIClientInterface interface {
+	CreateChatCompletion(ctx context.Context, req openai.ChatCompletionRequest) (openai.ChatCompletionResponse, error)
+}
+
 // Client represents an LLM client
 type Client struct {
-	client *openai.Client
 	model  string
+	client OpenAIClientInterface
 }
 
 // NewClient creates a new LLM client
 func NewClient(apiKey, model string) *Client {
 	return &Client{
-		client: openai.NewClient(apiKey),
 		model:  model,
+		client: openai.NewClient(apiKey),
 	}
 }
 
@@ -37,8 +40,12 @@ func (c *Client) GenerateText(ctx context.Context, prompt string) (string, error
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate text: %v", err)
+		return "", err
 	}
 
-	return strings.TrimSpace(resp.Choices[0].Message.Content), nil
+	if len(resp.Choices) == 0 {
+		return "", nil
+	}
+
+	return resp.Choices[0].Message.Content, nil
 }
