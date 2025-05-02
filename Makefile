@@ -21,9 +21,11 @@ GOMOD=$(GOCMD) mod
 BINARY_NAME_MIDAS=bin/midas
 BINARY_NAME_SF=bin/sf
 BINARY_NAME_AWS=bin/aws
+BINARY_NAME_WEB=bin/web
 MAIN_MIDAS=cmd/midas/main.go
 MAIN_SF=cmd/sf/main.go
 MAIN_AWS=cmd/aws/main.go
+MAIN_WEB=main.go
 
 # Build flags
 LDFLAGS=-ldflags "-w -s"
@@ -32,7 +34,7 @@ LDFLAGS=-ldflags "-w -s"
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
 
-.PHONY: all build clean test run-midas run-sf run-aws deps tidy vet fmt lint help setup coverage test-aws test-llm test-web
+.PHONY: all build clean test run-midas run-sf run-aws run-web deps tidy vet fmt lint help setup coverage test-aws test-llm test-web
 
 all: clean deps build
 
@@ -54,10 +56,11 @@ help:
 	@echo "  run-midas   - Run Midas application"
 	@echo "  run-sf      - Run SF application"
 	@echo "  run-aws     - Run AWS client"
+	@echo "  run-web     - Run Web server"
 	@echo "  setup       - Setup development environment"
 	@echo "  security    - Run security checks"
 
-build: build-midas build-sf build-aws
+build: build-midas build-sf build-aws build-web
 
 build-midas:
 	@echo "Building Midas..."
@@ -71,12 +74,17 @@ build-aws:
 	@echo "Building AWS client..."
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME_AWS) $(MAIN_AWS)
 
+build-web:
+	@echo "Building Web server..."
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME_WEB) $(MAIN_WEB)
+
 clean:
 	@echo "Cleaning..."
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME_MIDAS)
 	rm -f $(BINARY_NAME_SF)
 	rm -f $(BINARY_NAME_AWS)
+	rm -f $(BINARY_NAME_WEB)
 	rm -f $(COVERAGE_FILE)
 	rm -f $(COVERAGE_HTML)
 
@@ -131,6 +139,10 @@ run-sf:
 run-aws:
 	@echo "Running AWS client..."
 	$(GOCMD) run $(MAIN_AWS)
+
+run-web:
+	@echo "Running Web server..."
+	$(GOCMD) run $(MAIN_WEB)
 
 # Development environment setup
 setup:

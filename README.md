@@ -24,6 +24,11 @@ A Go project template with support for AWS, LLM, and web services.
 ├── pkg/               # Public library code
 │   └── config/       # Configuration management
 │       └── config.go # Configuration code
+├── bin/              # Binary output directory
+│   ├── midas        # Midas binary
+│   ├── sf           # SF binary
+│   ├── aws          # AWS binary
+│   └── web          # Web server binary
 ├── go.mod            # Go module definition
 ├── go.sum            # Go module checksums
 └── README.md         # Project documentation
@@ -152,6 +157,47 @@ open coverage.html
 ```
 
 ## Running the Applications
+
+### Running Web Server
+
+1. Build the web server binary:
+   ```bash
+   make build-web
+   ```
+
+2. Start the web server:
+   ```bash
+   make run-web
+   ```
+   Or run the binary directly:
+   ```bash
+   ./bin/web
+   ```
+
+3. Test the weather endpoint:
+   ```bash
+   curl "http://localhost:8080/api/weather?city=San%20Francisco&state=CA" | python -m json.tool
+   ```
+
+   The response will look like:
+   ```json
+   {
+     "city": "San Francisco",
+     "state": "CA",
+     "forecast": [
+       {
+         "date": "2024-03-21",
+         "temperature": {
+           "min": 15.0,
+           "max": 25.0
+         },
+         "description": "Sunny",
+         "humidity": 65,
+         "wind_speed": 5.5
+       }
+     ]
+   }
+   ```
 
 ### Running Midas
 

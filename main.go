@@ -1,57 +1,35 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/go-resty/resty/v2"
+	"github.com/chang/vamos/internal/web"
 )
 
 func main() {
-	fmt.Println("Making HTTP requests...")
+	// Create a new server on port 8080
+	server := web.NewServer(8080)
 
-	// Using built-in net/http
-	fmt.Println("\nUsing net/http:")
-	makeHttpRequest()
+	// Create a context that we'll use to gracefully shutdown the server
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// Using resty
-	fmt.Println("\nUsing resty:")
-	makeRestyRequest()
-}
+	// Handle graceful shutdown
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+		cancel()
+	}()
 
-func makeHttpRequest() {
-	resp, err := http.Get("https://httpbin.org/get")
-	if err != nil {
-		fmt.Printf("Error making request: %v\n", err)
-		return
+	// Start the server
+	fmt.Println("Starting server on port 8080...")
+	if err := server.Start(ctx); err != nil {
+		log.Fatalf("Server error: %v", err)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading response: %v\n", err)
-		return
-	}
-
-	fmt.Printf("Response status: %s\n", resp.Status)
-	fmt.Printf("Response body: %s\n", string(body))
-}
-
-func makeRestyRequest() {
-	client := resty.New()
-	client.SetTimeout(5 * time.Second)
-
-	resp, err := client.R().
-		SetHeader("Accept", "application/json").
-		Get("https://httpbin.org/get")
-
-	if err != nil {
-		fmt.Printf("Error making request: %v\n", err)
-		return
-	}
-
-	fmt.Printf("Response status: %s\n", resp.Status())
-	fmt.Printf("Response body: %s\n", string(resp.Body()))
 }
