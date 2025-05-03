@@ -276,3 +276,118 @@ Both applications expose the following endpoints:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Git Workflows
+
+The project includes a comprehensive git workflow management system to help maintain clean and consistent git practices.
+
+### Story Workflow
+
+The story workflow helps manage feature development with proper branch naming and commit conventions.
+
+1. **Start a new story**:
+```bash
+# Create a new story branch
+make story-start STORY_ID=456 DESCRIPTION="Chat UI"
+# Creates branch: feat/story-456-chat-ui
+```
+
+2. **Make changes and commit**:
+```bash
+# Commit changes with proper formatting
+make story-commit SCOPE=chat DESCRIPTION="add user message bubble"
+# Creates commit: feat(chat): add user message bubble
+```
+
+3. **Push the branch**:
+```bash
+make story-push
+```
+
+### Version Management
+
+Manage version tags and stable points in your codebase.
+
+```bash
+# Create and push a version tag
+make tag VERSION=v1.0.3 MESSAGE="Stable snapshot before auth refactor" PUSH=true
+```
+
+### Safe Reverts
+
+Safely undo changes or revert to previous states.
+
+```bash
+# Undo last commit (keep changes in working directory)
+make undo HARD=false
+
+# Undo last commit and discard changes
+make undo HARD=true
+
+# Revert a specific commit
+make revert COMMIT=abc123
+```
+
+### Remote Synchronization
+
+Keep your local repository in sync with remote and handle conflicts.
+
+```bash
+# Sync current branch with remote
+make sync MAIN=false
+
+# Sync main branch with remote
+make sync MAIN=true
+
+# Resolve conflicts by rebasing (default)
+make resolve REBASE=true
+
+# Resolve conflicts by merging
+make resolve REBASE=false
+```
+
+### Complete Workflow Example
+
+Here's a complete example of a typical development workflow:
+
+```bash
+# Start a new feature
+make story-start STORY_ID=456 DESCRIPTION="Chat UI"
+
+# Make changes and commit
+make story-commit SCOPE=chat DESCRIPTION="add user message bubble"
+
+# If conflicts arise
+make sync MAIN=true
+make resolve REBASE=true
+
+# Push changes
+make story-push
+
+# Create a stable point
+make tag VERSION=v1.0.3 MESSAGE="Stable snapshot" PUSH=true
+```
+
+### Using the Binary Directly
+
+You can also use the git workflow binary directly:
+
+```bash
+# Start a story
+bin/gitWF story-start --id 456 --description "Chat UI"
+
+# Commit changes
+bin/gitWF story-commit --scope chat --description "add user message bubble"
+
+# Push branch
+bin/gitWF story-push
+
+# Sync with remote
+bin/gitWF sync --main=false
+
+# Resolve conflicts
+bin/gitWF resolve --rebase=true
+
+# Create and push a tag
+bin/gitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
+```

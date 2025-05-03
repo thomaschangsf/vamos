@@ -11,6 +11,16 @@
    # make lint
    # make security
 
+# Git workflow
+# make story-start STORY_ID=123 DESCRIPTION="Feature description"
+# make story-commit SCOPE=feature DESCRIPTION="Commit description"
+# make story-push
+# make undo HARD=false
+# make revert COMMIT=abc123
+# make tag VERSION=v1.0.3 MESSAGE="Stable snapshot" PUSH=true
+# make sync MAIN=false
+# make resolve REBASE=true
+
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -22,10 +32,12 @@ BINARY_NAME_MIDAS=bin/midas
 BINARY_NAME_SF=bin/sf
 BINARY_NAME_AWS=bin/aws
 BINARY_NAME_WEB=bin/web
+BINARY_NAME_GIT=bin/gitworkflow
 MAIN_MIDAS=cmd/midas/main.go
 MAIN_SF=cmd/sf/main.go
 MAIN_AWS=cmd/aws/main.go
 MAIN_WEB=main.go
+MAIN_GIT=cmd/gitworkflow/main.go
 
 # Build flags
 LDFLAGS=-ldflags "-w -s"
@@ -34,7 +46,7 @@ LDFLAGS=-ldflags "-w -s"
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
 
-.PHONY: all build clean test run-midas run-sf run-aws run-web deps tidy vet fmt lint help setup coverage test-aws test-llm test-web
+.PHONY: all build clean test run-midas run-sf run-aws run-web deps tidy vet fmt lint help setup coverage test-aws test-llm test-web story-start story-commit story-push build-git undo revert tag sync resolve
 
 all: clean deps build
 
@@ -59,8 +71,70 @@ help:
 	@echo "  run-web     - Run Web server"
 	@echo "  setup       - Setup development environment"
 	@echo "  security    - Run security checks"
+	@echo "  build-git   - Build git workflow binary"
+	@echo "  story-start - Start a new story branch (requires STORY_ID and DESCRIPTION)"
+	@echo "  story-commit - Commit changes (requires SCOPE and DESCRIPTION)"
+	@echo "  story-push  - Push current story branch"
+	@echo "  undo        - Undo last commit (HARD=true to discard changes)"
+	@echo "  revert      - Revert a specific commit (requires COMMIT)"
+	@echo "  tag         - Create a version tag (requires VERSION and MESSAGE, PUSH=true to push)"
+	@echo "  sync        - Sync with remote (MAIN=true to sync main branch)"
+	@echo "  resolve     - Resolve conflicts (REBASE=false to use merge instead)"
 
-build: build-midas build-sf build-aws build-web
+build: build-midas build-sf build-aws build-web build-git
+
+build-git:
+	@echo "Building git workflow..."
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME_GIT) $(MAIN_GIT)
+
+# Git workflow commands
+story-start:
+	@if [ -z "$(STORY_ID)" ] || [ -z "$(DESCRIPTION)" ]; then \
+		echo "Error: STORY_ID and DESCRIPTION are required"; \
+		exit 1; \
+	fi
+	@echo "Starting new story branch..."
+	$(BINARY_NAME_GIT) story-start --id $(STORY_ID) --description "$(DESCRIPTION)"
+
+story-commit:
+	@if [ -z "$(SCOPE)" ] || [ -z "$(DESCRIPTION)" ]; then \
+		echo "Error: SCOPE and DESCRIPTION are required"; \
+		exit 1; \
+	fi
+	@echo "Committing changes..."
+	$(BINARY_NAME_GIT) story-commit --scope $(SCOPE) --description "$(DESCRIPTION)"
+
+story-push:
+	@echo "Pushing story branch..."
+	$(BINARY_NAME_GIT) story-push
+
+undo:
+	@echo "Undoing last commit..."
+	$(BINARY_NAME_GIT) undo --hard=$(HARD)
+
+revert:
+	@if [ -z "$(COMMIT)" ]; then \
+		echo "Error: COMMIT is required"; \
+		exit 1; \
+	fi
+	@echo "Reverting commit..."
+	$(BINARY_NAME_GIT) revert --commit $(COMMIT)
+
+tag:
+	@if [ -z "$(VERSION)" ] || [ -z "$(MESSAGE)" ]; then \
+		echo "Error: VERSION and MESSAGE are required"; \
+		exit 1; \
+	fi
+	@echo "Creating tag..."
+	$(BINARY_NAME_GIT) tag --version $(VERSION) --message "$(MESSAGE)" --push=$(PUSH)
+
+sync:
+	@echo "Syncing with remote..."
+	$(BINARY_NAME_GIT) sync --main=$(MAIN)
+
+resolve:
+	@echo "Resolving conflicts..."
+	$(BINARY_NAME_GIT) resolve --rebase=$(REBASE)
 
 build-midas:
 	@echo "Building Midas..."
