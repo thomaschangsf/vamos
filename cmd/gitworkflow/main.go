@@ -160,4 +160,4 @@ func main() {
 		fmt.Println("Expected one of: 'story-start', 'story-commit', 'story-push', 'undo', 'revert', 'tag', 'sync', or 'resolve'")
 		os.Exit(1)
 	}
-} 
+}
