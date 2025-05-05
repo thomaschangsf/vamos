@@ -74,7 +74,7 @@ func (wm *WorkflowManager) SyncWithRemote() error {
 	behind, _ := strconv.Atoi(parts[1])
 
 	if ahead > 0 {
-		return fmt.Errorf("local branch is ahead of remote. Please push your changes first")
+		return fmt.Errorf("local branch is ahead of remote by %d commits. Please push your changes first using 'git push' or 'make story-push'", ahead)
 	}
 
 	if behind > 0 {
