@@ -392,22 +392,22 @@ You can also use the git workflow binary directly:
 
 ```bash
 # Start a story
-bin/gitWF story-start --id 456 --description "Chat UI"
+vamosGitWF story-start --id 456 --description "Chat UI"
 
 # Commit changes
-bin/gitWF story-commit --scope chat --description "add user message bubble"
+vamosGitWF story-commit --scope chat --description "add user message bubble"
 
 # Push branch
-bin/gitWF story-push
+vamosGitWF story-push
 
 # Sync with remote
-bin/gitWF sync --main=false
+vamosGitWF sync --main=false
 
 # Resolve conflicts
-bin/gitWF resolve --rebase=true
+vamosGitWF resolve --rebase=true
 
 # Create and push a tag
-bin/gitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
+vamosGitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
 ```
 
 ## Building and Installing
@@ -417,8 +417,11 @@ bin/gitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
 # Build all binaries
 make build
 
-# Install binaries to your PATH (requires sudo)
-sudo make install
+# Add binaries to your PATH (for current session)
+export PATH="/Users/thomaschang/Documents/dev/git/thomaschangsf/vamos/bin:$PATH"
+
+# To make this permanent, add this line to your ~/.bashrc or ~/.zshrc:
+export PATH="/Users/thomaschang/Documents/dev/git/thomaschangsf/vamos/bin:$PATH"
 
 # Now you can run any tool from anywhere
 vamosGitWF story-start --id 123 --description "New feature"
@@ -451,30 +454,6 @@ The binaries will be created in the `bin/` directory:
 - `bin/vamosWeb`
 - `bin/vamosGitWF`
 
-### Installation
-
-To make the binaries available system-wide:
-
-1. Install to your PATH (requires sudo):
-```bash
-sudo make install
-```
-This will copy the binaries to `/opt/homebrew/bin/` making them accessible from anywhere.
-
-2. Verify installation:
-```bash
-vamosMidas --version
-vamosSF --version
-vamosAWS --version
-vamosWeb --version
-vamosGitWF
-```
-
-3. To uninstall:
-```bash
-sudo make uninstall
-```
-
 ### Git Workflow Tool (vamosGitWF)
 
 The `vamosGitWF` tool provides several commands for managing git workflows:
@@ -497,11 +476,5 @@ vamosGitWF revert --commit abc123
 
 # Create and push a version tag
 vamosGitWF tag --version v1.0.3 --message "Stable release" --push=true
-
-# Sync with remote
-vamosGitWF sync --main=false
-
-# Resolve conflicts
-vamosGitWF resolve --rebase=true
 ```
   
