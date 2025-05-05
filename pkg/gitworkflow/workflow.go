@@ -3,6 +3,7 @@ package gitworkflow
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -30,9 +31,54 @@ func NewWorkflowManager() *WorkflowManager {
 
 // SyncWithRemote syncs the current branch with remote
 func (wm *WorkflowManager) SyncWithRemote() error {
-	// Pull latest changes
-	if err := wm.pullLatest(); err != nil {
-		return fmt.Errorf("failed to pull latest changes: %w", err)
+	// First fetch to get latest changes without merging
+	if err := wm.fetchOrigin(); err != nil {
+		return fmt.Errorf("failed to fetch from origin: %w", err)
+	}
+
+	// Get current branch name
+	currentBranch, err := wm.GetCurrentBranch()
+	if err != nil {
+		return fmt.Errorf("failed to get current branch: %w", err)
+	}
+
+	// Check if there are local changes
+	cmd := exec.Command("git", "status", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to check git status: %w", err)
+	}
+
+	if len(output) > 0 {
+		return fmt.Errorf("local changes detected. Please commit or stash your changes before syncing")
+	}
+
+	// Check if local branch has diverged from remote
+	cmd = exec.Command("git", "rev-list", "--left-right", "--count", fmt.Sprintf("origin/%s...%s", currentBranch, currentBranch))
+	output, err = cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to check branch divergence: %w", err)
+	}
+
+	// Parse the output (format: "X\tY" where X is commits ahead, Y is commits behind)
+	parts := strings.Fields(string(output))
+	if len(parts) != 2 {
+		return fmt.Errorf("unexpected output from rev-list command")
+	}
+
+	ahead, _ := strconv.Atoi(parts[0])
+	behind, _ := strconv.Atoi(parts[1])
+
+	if ahead > 0 {
+		return fmt.Errorf("local branch is ahead of remote. Please push your changes first")
+	}
+
+	if behind > 0 {
+		// Pull changes from remote
+		cmd = exec.Command("git", "pull", "--rebase")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to pull changes: %w", err)
+		}
 	}
 
 	return nil

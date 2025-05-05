@@ -344,17 +344,14 @@ Keep your local repository in sync with remote and handle conflicts.
 
 ```bash
 # Sync current branch with remote
-# This syncs your current branch with its remote counterpart
-#For example, if you're on branch feat/story-456-chat-ui, it will pull changes from origin/feat/story-456-chat-ui
-#This is useful when you want to get the latest changes for your feature branch
+# This will:
+# 1. Check for local changes (will fail if there are uncommitted changes)
+# 2. Check if your branch is ahead of remote (will fail if you need to push)
+# 3. Pull and rebase if your branch is behind remote
 make sync MAIN=false
 
 # Sync main branch with remote
-#This checks out the main branch and pulls the latest changes from origin/main
-#It's useful when you want to:
-#  Update your local main branch with the latest changes from remote
-#  Get the latest changes from main before rebasing your feature branch
-#  Ensure your main branch is up to date before creating a new feature branch
+# This checks out the main branch and pulls the latest changes from origin/main
 make sync MAIN=true
 
 # Resolve conflicts by rebasing (default)
@@ -407,7 +404,7 @@ vamosGitWF sync --main=false
 vamosGitWF resolve --rebase=true
 
 # Create and push a tag
-vamosGitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
+vamosGitWF tag --version v1.0.3 --message "Stable release" --push=true
 ```
 
 ## Building and Installing
