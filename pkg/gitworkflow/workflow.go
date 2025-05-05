@@ -43,7 +43,12 @@ func (wm *WorkflowManager) SyncWithRemote() error {
 	}
 
 	// Check if there are uncommitted changes (ignoring untracked files)
-	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD", "--")
+	cmd := exec.Command("git", "update-index", "-q", "--refresh")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to refresh git index: %w", err)
+	}
+
+	cmd = exec.Command("git", "diff-index", "--quiet", "HEAD")
 	if err := cmd.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
 			return fmt.Errorf("uncommitted changes detected. Please commit or stash your changes before syncing")
