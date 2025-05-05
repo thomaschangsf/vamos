@@ -2,6 +2,16 @@
 
 A Go project template with support for AWS, LLM, and web services.
 
+## Available Binaries
+
+The project includes several command-line tools:
+
+- `vamosMidas` - Midas application
+- `vamosSF` - SF application
+- `vamosAWS` - AWS client
+- `vamosWeb` - Web server
+- `vamosGitWF` - Git workflow management tool
+
 ## Project Structure
 
 ```
@@ -334,9 +344,17 @@ Keep your local repository in sync with remote and handle conflicts.
 
 ```bash
 # Sync current branch with remote
+# This syncs your current branch with its remote counterpart
+#For example, if you're on branch feat/story-456-chat-ui, it will pull changes from origin/feat/story-456-chat-ui
+#This is useful when you want to get the latest changes for your feature branch
 make sync MAIN=false
 
 # Sync main branch with remote
+#This checks out the main branch and pulls the latest changes from origin/main
+#It's useful when you want to:
+#  Update your local main branch with the latest changes from remote
+#  Get the latest changes from main before rebasing your feature branch
+#  Ensure your main branch is up to date before creating a new feature branch
 make sync MAIN=true
 
 # Resolve conflicts by rebasing (default)
@@ -391,3 +409,99 @@ bin/gitWF resolve --rebase=true
 # Create and push a tag
 bin/gitWF tag --version v1.0.3 --message "Stable snapshot" --push=true
 ```
+
+## Building and Installing
+
+### Quick Start
+```bash
+# Build all binaries
+make build
+
+# Install binaries to your PATH (requires sudo)
+sudo make install
+
+# Now you can run any tool from anywhere
+vamosGitWF story-start --id 123 --description "New feature"
+vamosMidas
+vamosSF
+vamosAWS
+vamosWeb
+```
+
+### Detailed Build Instructions
+
+1. Build specific binaries:
+```bash
+make build-midas    # Build vamosMidas
+make build-sf       # Build vamosSF
+make build-aws      # Build vamosAWS
+make build-web      # Build vamosWeb
+make build-git      # Build vamosGitWF
+```
+
+2. Build all binaries at once:
+```bash
+make build
+```
+
+The binaries will be created in the `bin/` directory:
+- `bin/vamosMidas`
+- `bin/vamosSF`
+- `bin/vamosAWS`
+- `bin/vamosWeb`
+- `bin/vamosGitWF`
+
+### Installation
+
+To make the binaries available system-wide:
+
+1. Install to your PATH (requires sudo):
+```bash
+sudo make install
+```
+This will copy the binaries to `/opt/homebrew/bin/` making them accessible from anywhere.
+
+2. Verify installation:
+```bash
+vamosMidas --version
+vamosSF --version
+vamosAWS --version
+vamosWeb --version
+vamosGitWF
+```
+
+3. To uninstall:
+```bash
+sudo make uninstall
+```
+
+### Git Workflow Tool (vamosGitWF)
+
+The `vamosGitWF` tool provides several commands for managing git workflows:
+
+```bash
+# Start a new story
+vamosGitWF story-start --id 123 --description "New feature"
+
+# Commit changes
+vamosGitWF story-commit --scope feature --description "Add login button"
+
+# Push story branch
+vamosGitWF story-push
+
+# Undo last commit
+vamosGitWF undo --hard=false
+
+# Revert a specific commit
+vamosGitWF revert --commit abc123
+
+# Create and push a version tag
+vamosGitWF tag --version v1.0.3 --message "Stable release" --push=true
+
+# Sync with remote
+vamosGitWF sync --main=false
+
+# Resolve conflicts
+vamosGitWF resolve --rebase=true
+```
+  

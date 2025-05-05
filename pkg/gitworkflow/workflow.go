@@ -30,12 +30,6 @@ func NewWorkflowManager() *WorkflowManager {
 
 // SyncWithRemote syncs the current branch with remote
 func (wm *WorkflowManager) SyncWithRemote() error {
-	// Get current branch
-	currentBranch, err := wm.GetCurrentBranch()
-	if err != nil {
-		return fmt.Errorf("failed to get current branch: %w", err)
-	}
-
 	// Pull latest changes
 	if err := wm.pullLatest(); err != nil {
 		return fmt.Errorf("failed to pull latest changes: %w", err)
@@ -113,7 +107,7 @@ func (wm *WorkflowManager) pullLatest() error {
 func (wm *WorkflowManager) CreateStoryBranch(storyID string, description string) error {
 	// Format the branch name
 	branchName := fmt.Sprintf("feat/story-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
-	
+
 	// Ensure we're on main branch
 	if err := wm.checkoutBranch("main"); err != nil {
 		return fmt.Errorf("failed to checkout main branch: %w", err)
@@ -137,7 +131,7 @@ func (wm *WorkflowManager) CreateStoryBranch(storyID string, description string)
 func (wm *WorkflowManager) CommitChanges(scope string, description string) error {
 	// Format the commit message
 	commitMessage := fmt.Sprintf("feat(%s): %s", scope, description)
-	
+
 	// Add all changes
 	addCmd := exec.Command("git", "add", ".")
 	if err := addCmd.Run(); err != nil {
@@ -312,4 +306,4 @@ func (wm *WorkflowManager) GetLastCommitHash() (string, error) {
 		return "", fmt.Errorf("failed to get last commit hash: %w", err)
 	}
 	return strings.TrimSpace(string(output)), nil
-} 
+}

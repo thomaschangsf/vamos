@@ -28,11 +28,11 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
-BINARY_NAME_MIDAS=bin/midas
-BINARY_NAME_SF=bin/sf
-BINARY_NAME_AWS=bin/aws
-BINARY_NAME_WEB=bin/web
-BINARY_NAME_GIT=bin/gitworkflow
+BINARY_NAME_MIDAS=bin/vamosMidas
+BINARY_NAME_SF=bin/vamosSF
+BINARY_NAME_AWS=bin/vamosAWS
+BINARY_NAME_WEB=bin/vamosWeb
+BINARY_NAME_GIT=bin/vamosGitWF
 MAIN_MIDAS=cmd/midas/main.go
 MAIN_SF=cmd/sf/main.go
 MAIN_AWS=cmd/aws/main.go
@@ -46,14 +46,14 @@ LDFLAGS=-ldflags "-w -s"
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
 
-.PHONY: all build clean test run-midas run-sf run-aws run-web deps tidy vet fmt lint help setup coverage test-aws test-llm test-web story-start story-commit story-push build-git undo revert tag sync resolve
+.PHONY: all build clean test run-midas run-sf run-aws run-web deps tidy vet fmt lint help setup coverage test-aws test-llm test-web story-start story-commit story-push build-git undo revert tag sync resolve install uninstall
 
 all: clean deps build
 
 help:
 	@echo "Available targets:"
 	@echo "  all         - Clean, install deps, and build both applications"
-	@echo "  build       - Build both applications"
+	@echo "  build       - Build binaries and setup local PATH access"
 	@echo "  clean       - Remove build artifacts"
 	@echo "  deps        - Install dependencies"
 	@echo "  tidy        - Clean up dependencies"
@@ -80,11 +80,19 @@ help:
 	@echo "  tag         - Create a version tag (requires VERSION and MESSAGE, PUSH=true to push)"
 	@echo "  sync        - Sync with remote (MAIN=true to sync main branch)"
 	@echo "  resolve     - Resolve conflicts (REBASE=false to use merge instead)"
+	@echo "  install     - Install binaries to PATH"
+	@echo "  uninstall   - Uninstall binaries from PATH"
 
 build: build-midas build-sf build-aws build-web build-git
+	@echo "\nTo use vamos binaries, run this command:"
+	@echo "  export PATH=\"$(PWD)/bin:\$$PATH\""
+	@echo "\nTo make this permanent, add the above line to your ~/.bashrc or ~/.zshrc"
+	@echo "\nCurrent vamos binaries available:"
+	@ls -1 bin/vamos*
 
 build-git:
 	@echo "Building git workflow..."
+	mkdir -p bin
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME_GIT) $(MAIN_GIT)
 
 # Git workflow commands
@@ -239,4 +247,34 @@ docs:
 # Clean up all generated files
 distclean: clean
 	rm -f coverage.out coverage.html
-	rm -rf bin/ 
+	rm -rf bin/
+
+# Install binaries to PATH
+install: build
+	@echo "Installing binaries to /opt/homebrew/bin..."
+	@if [ -d "/opt/homebrew/bin" ]; then \
+		cp $(BINARY_NAME_MIDAS) /opt/homebrew/bin/vamosMidas; \
+		cp $(BINARY_NAME_SF) /opt/homebrew/bin/vamosSF; \
+		cp $(BINARY_NAME_AWS) /opt/homebrew/bin/vamosAWS; \
+		cp $(BINARY_NAME_WEB) /opt/homebrew/bin/vamosWeb; \
+		cp $(BINARY_NAME_GIT) /opt/homebrew/bin/vamosGitWF; \
+		chmod +x /opt/homebrew/bin/vamosMidas; \
+		chmod +x /opt/homebrew/bin/vamosSF; \
+		chmod +x /opt/homebrew/bin/vamosAWS; \
+		chmod +x /opt/homebrew/bin/vamosWeb; \
+		chmod +x /opt/homebrew/bin/vamosGitWF; \
+		echo "Binaries installed successfully."; \
+	else \
+		echo "Error: /opt/homebrew/bin directory not found. Are you using Homebrew?"; \
+		exit 1; \
+	fi
+
+# Uninstall binaries from PATH
+uninstall:
+	@echo "Uninstalling binaries from /opt/homebrew/bin..."
+	@rm -f /opt/homebrew/bin/vamosMidas
+	@rm -f /opt/homebrew/bin/vamosSF
+	@rm -f /opt/homebrew/bin/vamosAWS
+	@rm -f /opt/homebrew/bin/vamosWeb
+	@rm -f /opt/homebrew/bin/vamosGitWF
+	@echo "Binaries uninstalled successfully." 

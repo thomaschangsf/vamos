@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/chang/vamos/internal/aws"
-	"github.com/chang/vamos/internal/llm"
-	"github.com/chang/vamos/internal/web"
-	"github.com/chang/vamos/pkg/config"
+	"github.com/thomaschangsf/vamos/internal/aws"
+	"github.com/thomaschangsf/vamos/internal/llm"
+	"github.com/thomaschangsf/vamos/internal/web"
+	"github.com/thomaschangsf/vamos/pkg/config"
 )
 
 func main() {

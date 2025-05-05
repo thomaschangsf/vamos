@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/chang/vamos/internal/aws"
+	"github.com/thomaschangsf/vamos/internal/aws"
 )
 
 /*

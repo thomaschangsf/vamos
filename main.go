@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/chang/vamos/internal/web"
+	"github.com/thomaschangsf/vamos/internal/web"
 )
 
 func main() {
