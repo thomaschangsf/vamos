@@ -163,7 +163,7 @@ func (wm *WorkflowManager) pullLatest() error {
 // CreateStoryBranch creates a new story branch from the main branch
 func (wm *WorkflowManager) CreateStoryBranch(storyID string, description string) error {
 	// Format the branch name
-	branchName := fmt.Sprintf("feat/story-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
+	branchName := fmt.Sprintf("feat/W-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
 
 	// Ensure we're on main branch
 	if err := wm.checkoutBranch("main"); err != nil {
@@ -363,4 +363,55 @@ func (wm *WorkflowManager) GetLastCommitHash() (string, error) {
 		return "", fmt.Errorf("failed to get last commit hash: %w", err)
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+// PrintExample prints out an end-to-end example of the git workflow
+func (wm *WorkflowManager) PrintExample() {
+	fmt.Println(`
+End-to-End Git Workflow Example
+==============================
+
+1. Start a new story:
+   vamosGitWF story-start --id "123" --description "add-user-authentication"
+
+2. Make some changes and commit them:
+   vamosGitWF story-commit --scope "auth" --description "implement basic login flow"
+
+3. If you need to undo your last commit (keeping changes):
+   vamosGitWF undo
+
+4. If you need to undo your last commit (discarding changes):
+   vamosGitWF undo --hard
+
+5. If you need to revert a specific commit:
+   vamosGitWF revert --commit "abc123"
+
+6. When you're ready to sync with remote changes:
+   vamosGitWF sync
+
+7. If there are conflicts, resolve them:
+   vamosGitWF resolve
+
+8. When the story is complete, create a version tag:
+   vamosGitWF tag --version "v1.0.0" --message "Initial release" --push
+
+9. If you need to revert to a previous tag:
+    git checkout v1.0.0  # Checkout the tag
+    vamosGitWF story-start --id "124" --description "fix-regression"  # Create a new branch from the tag
+
+10. Push your changes to remote:
+    vamosGitWF story-push
+
+11. Finally, sync the main branch:
+    vamosGitWF sync --main
+
+Best Practices:
+- Always start from the main branch
+- Commit frequently with clear, descriptive messages
+- Push your changes regularly
+- Use sync before starting new work
+- Resolve conflicts as soon as they appear
+- Tag releases when features are complete
+- Use tags as stable points to revert to if needed
+`)
 }

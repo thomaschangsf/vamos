@@ -41,12 +41,16 @@ func main() {
 
 	// Check if a subcommand was provided
 	if len(os.Args) < 2 {
-		fmt.Println("Expected one of: 'story-start', 'story-commit', 'story-push', 'undo', 'revert', 'tag', 'sync', or 'resolve'")
+		fmt.Println("Expected one of: 'story-start', 'story-commit', 'story-push', 'undo', 'revert', 'tag', 'sync', 'resolve', or 'example'")
 		os.Exit(1)
 	}
 
 	// Parse the subcommand
 	switch os.Args[1] {
+	case "example":
+		wm.PrintExample()
+		os.Exit(0)
+
 	case "story-start":
 		storyStartCmd.Parse(os.Args[2:])
 		if *storyID == "" || *description == "" {
@@ -157,7 +161,7 @@ func main() {
 		}
 
 	default:
-		fmt.Println("Expected one of: 'story-start', 'story-commit', 'story-push', 'undo', 'revert', 'tag', 'sync', or 'resolve'")
+		fmt.Println("Expected one of: 'story-start', 'story-commit', 'story-push', 'undo', 'revert', 'tag', 'sync', 'resolve', or 'example'")
 		os.Exit(1)
 	}
 }
