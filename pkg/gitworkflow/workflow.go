@@ -42,21 +42,30 @@ func (wm *WorkflowManager) SyncWithRemote() error {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 
-	// Check if there are local changes
-	cmd := exec.Command("git", "status", "--porcelain")
-	output, err := cmd.Output()
-	if err != nil {
+	// Check if there are uncommitted changes (ignoring untracked files)
+	cmd := exec.Command("git", "diff", "--quiet", "HEAD")
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+			// Check if changes are staged
+			cmd = exec.Command("git", "diff", "--quiet", "--cached")
+			if err := cmd.Run(); err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+					return fmt.Errorf("staged changes detected. Please commit your changes before syncing")
+				}
+			}
+			return fmt.Errorf("uncommitted changes detected. Please commit or stash your changes before syncing")
+		}
 		return fmt.Errorf("failed to check git status: %w", err)
-	}
-
-	if len(output) > 0 {
-		return fmt.Errorf("local changes detected. Please commit or stash your changes before syncing")
 	}
 
 	// Check if local branch has diverged from remote
 	cmd = exec.Command("git", "rev-list", "--left-right", "--count", fmt.Sprintf("origin/%s...%s", currentBranch, currentBranch))
-	output, err = cmd.Output()
+	output, err := cmd.Output()
 	if err != nil {
+		// If the remote branch doesn't exist yet, that's okay - we'll create it later
+		if strings.Contains(err.Error(), "unknown revision") {
+			return nil
+		}
 		return fmt.Errorf("failed to check branch divergence: %w", err)
 	}
 
