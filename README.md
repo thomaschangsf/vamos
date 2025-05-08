@@ -407,6 +407,62 @@ vamosGitWF resolve --rebase=true
 vamosGitWF tag --version v1.0.3 --message "Stable release" --push=true
 ```
 
+## Git Workflow Tool
+
+The `vamosGitWF` tool helps manage git workflow with a standardized approach to branch naming and commit messages.
+
+### Branch Naming Convention
+
+Branches follow the format: `W-STORY_ID[-description]`
+- `W-` prefix is required
+- `STORY_ID` is required (e.g., "123")
+- `description` is optional (e.g., "add-login")
+
+Examples:
+- `W-123` - Basic story branch
+- `W-123-add-login` - Story branch with description
+
+### Common Commands
+
+1. Start a new story:
+   ```bash
+   # With description
+   vamosGitWF story-start --id "123" --description "add-login"
+
+   # Without description
+   vamosGitWF story-start --id "123"
+   ```
+
+2. Commit changes:
+   ```bash
+   vamosGitWF story-commit --scope "auth" --description "implement login flow"
+   ```
+
+3. Sync with remote:
+   ```bash
+   vamosGitWF sync
+   ```
+
+4. Push changes:
+   ```bash
+   vamosGitWF story-push
+   ```
+
+5. Create a version tag:
+   ```bash
+   vamosGitWF tag --version "v1.0.0" --message "Initial release" --push
+   ```
+
+### Best Practices
+
+- Always start from the main branch
+- Commit frequently with clear, descriptive messages
+- Push your changes regularly
+- Use sync before starting new work
+- Resolve conflicts as soon as they appear
+- Tag releases when features are complete
+- Use tags as stable points to revert to if needed
+
 ## Building and Installing
 
 ### Quick Start

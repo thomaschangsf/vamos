@@ -16,7 +16,7 @@ func main() {
 	// Define subcommands
 	storyStartCmd := flag.NewFlagSet("story-start", flag.ExitOnError)
 	storyID := storyStartCmd.String("id", "", "Story ID (required)")
-	description := storyStartCmd.String("description", "", "Story description (required)")
+	description := storyStartCmd.String("description", "", "Story description (optional)")
 
 	storyCommitCmd := flag.NewFlagSet("story-commit", flag.ExitOnError)
 	scope := storyCommitCmd.String("scope", "", "Commit scope (required)")
@@ -53,8 +53,8 @@ func main() {
 
 	case "story-start":
 		storyStartCmd.Parse(os.Args[2:])
-		if *storyID == "" || *description == "" {
-			fmt.Println("Error: --id and --description are required")
+		if *storyID == "" {
+			fmt.Println("Error: --id is required")
 			storyStartCmd.PrintDefaults()
 			os.Exit(1)
 		}
@@ -62,7 +62,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Created and switched to branch: feat/story-%s-%s\n", *storyID, *description)
+		if *description != "" {
+			fmt.Printf("Created and switched to branch: W-%s-%s\n", *storyID, *description)
+		} else {
+			fmt.Printf("Created and switched to branch: W-%s\n", *storyID)
+		}
 
 	case "story-commit":
 		storyCommitCmd.Parse(os.Args[2:])

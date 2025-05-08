@@ -2,6 +2,7 @@ package gitworkflow
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"testing"
 )
@@ -33,33 +34,28 @@ func TestValidateBranchName(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "valid feature branch",
-			branch:  "feat/login-button",
+			name:    "valid story branch",
+			branch:  "W-123",
 			wantErr: false,
 		},
 		{
-			name:    "valid bugfix branch",
-			branch:  "bugfix/issue-123",
+			name:    "valid story branch with description",
+			branch:  "W-123-add-login-button",
 			wantErr: false,
 		},
 		{
-			name:    "valid chore branch",
-			branch:  "chore/refactor-auth",
-			wantErr: false,
-		},
-		{
-			name:    "invalid branch type",
-			branch:  "invalid/login-button",
+			name:    "invalid prefix",
+			branch:  "X-123",
 			wantErr: true,
 		},
 		{
-			name:    "missing description",
-			branch:  "feat/",
+			name:    "missing story ID",
+			branch:  "W-",
 			wantErr: true,
 		},
 		{
-			name:    "no separator",
-			branch:  "featlogin-button",
+			name:    "no prefix",
+			branch:  "123",
 			wantErr: true,
 		},
 	}
@@ -75,16 +71,55 @@ func TestValidateBranchName(t *testing.T) {
 }
 
 func TestStoryBranchNameFormat(t *testing.T) {
-	wm := NewWorkflowManager()
 	storyID := "456"
 	description := "Chat UI"
 
-	// This test doesn't actually create the branch, just verifies the format
-	branchName := fmt.Sprintf("feat/story-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
-	expected := "feat/story-456-chat-ui"
+	// Test with description
+	branchNameWithDesc := fmt.Sprintf("W-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
+	expectedWithDesc := "W-456-chat-ui"
+	if branchNameWithDesc != expectedWithDesc {
+		t.Errorf("Expected branch name with description %s, got %s", expectedWithDesc, branchNameWithDesc)
+	}
 
-	if branchName != expected {
-		t.Errorf("Expected branch name %s, got %s", expected, branchName)
+	// Test without description
+	branchNameWithoutDesc := fmt.Sprintf("W-%s", storyID)
+	expectedWithoutDesc := "W-456"
+	if branchNameWithoutDesc != expectedWithoutDesc {
+		t.Errorf("Expected branch name without description %s, got %s", expectedWithoutDesc, branchNameWithoutDesc)
+	}
+}
+
+func TestGetDefaultBranch(t *testing.T) {
+	wm := NewWorkflowManager()
+
+	// Save current branch to restore later
+	currentBranch, err := wm.GetCurrentBranch()
+	if err != nil {
+		t.Fatalf("Failed to get current branch: %v", err)
+	}
+
+	// Get the default branch
+	defaultBranch, err := wm.getDefaultBranch()
+	if err != nil {
+		t.Fatalf("Failed to get default branch: %v", err)
+	}
+
+	// Verify that the default branch is either main or master
+	if defaultBranch != "main" && defaultBranch != "master" {
+		t.Errorf("Expected default branch to be 'main' or 'master', got %s", defaultBranch)
+	}
+
+	// Verify that the branch actually exists
+	cmd := exec.Command("git", "rev-parse", "--verify", fmt.Sprintf("refs/heads/%s", defaultBranch))
+	if err := cmd.Run(); err != nil {
+		t.Errorf("Default branch %s does not exist", defaultBranch)
+	}
+
+	// Restore original branch if different
+	if currentBranch != defaultBranch {
+		if err := wm.checkoutBranch(currentBranch); err != nil {
+			t.Errorf("Failed to restore original branch: %v", err)
+		}
 	}
 }
 
@@ -96,28 +131,28 @@ func TestCreateStoryBranch(t *testing.T) {
 	wm := NewWorkflowManager()
 	storyID := "456"
 	description := "Chat UI"
-	
+
 	err := wm.CreateStoryBranch(storyID, description)
 	if err != nil {
 		t.Errorf("Failed to create story branch: %v", err)
 	}
-	
+
 	currentBranch, err := wm.GetCurrentBranch()
 	if err != nil {
 		t.Errorf("Failed to get current branch: %v", err)
 	}
-	
-	expectedBranch := "feat/story-456-chat-ui"
+
+	expectedBranch := "W-456-chat-ui"
 	if currentBranch != expectedBranch {
 		t.Errorf("Expected branch %s, got %s", expectedBranch, currentBranch)
 	}
-	
+
 	// Cleanup
 	cmd := exec.Command("git", "checkout", "main")
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Failed to cleanup: %v", err)
 	}
-	
+
 	cmd = exec.Command("git", "branch", "-D", expectedBranch)
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Failed to cleanup: %v", err)
@@ -128,22 +163,22 @@ func TestCommitChanges(t *testing.T) {
 	wm := NewWorkflowManager()
 	scope := "chat"
 	description := "add user message bubble"
-	
+
 	err := wm.CommitChanges(scope, description)
 	if err != nil {
 		t.Errorf("Failed to commit changes: %v", err)
 	}
-	
+
 	// Verify the commit message
 	cmd := exec.Command("git", "log", "-1", "--pretty=%B")
 	output, err := cmd.Output()
 	if err != nil {
 		t.Errorf("Failed to get commit message: %v", err)
 	}
-	
+
 	expectedMessage := "feat(chat): add user message bubble"
 	if strings.TrimSpace(string(output)) != expectedMessage {
 		t.Errorf("Expected commit message %s, got %s", expectedMessage, string(output))
 	}
 }
-*/ 
+*/

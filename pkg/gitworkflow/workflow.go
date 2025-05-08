@@ -7,18 +7,6 @@ import (
 	"strings"
 )
 
-// BranchType represents the type of branch
-type BranchType string
-
-const (
-	// Feature branch for new features
-	Feature BranchType = "feat"
-	// Bugfix branch for fixing bugs
-	Bugfix BranchType = "bugfix"
-	// Chore branch for maintenance tasks
-	Chore BranchType = "chore"
-)
-
 // WorkflowManager handles git workflow operations
 type WorkflowManager struct {
 	// Add configuration fields as needed
@@ -95,11 +83,34 @@ func (wm *WorkflowManager) SyncWithRemote() error {
 	return nil
 }
 
-// SyncMainBranch syncs the main branch with remote
+// getDefaultBranch determines whether the repository uses 'main' or 'master'
+func (wm *WorkflowManager) getDefaultBranch() (string, error) {
+	// Try to get the ref for main
+	cmdMain := exec.Command("git", "rev-parse", "--verify", "refs/heads/main")
+	if err := cmdMain.Run(); err == nil {
+		return "main", nil
+	}
+
+	// Try to get the ref for master
+	cmdMaster := exec.Command("git", "rev-parse", "--verify", "refs/heads/master")
+	if err := cmdMaster.Run(); err == nil {
+		return "master", nil
+	}
+
+	return "", fmt.Errorf("neither 'main' nor 'master' branch found")
+}
+
+// SyncMainBranch syncs the main branch with remote (works with either main or master)
 func (wm *WorkflowManager) SyncMainBranch() error {
-	// Checkout main branch
-	if err := wm.checkoutBranch("main"); err != nil {
-		return fmt.Errorf("failed to checkout main branch: %w", err)
+	// Determine which default branch is used
+	defaultBranch, err := wm.getDefaultBranch()
+	if err != nil {
+		return err
+	}
+
+	// Checkout main/master branch
+	if err := wm.checkoutBranch(defaultBranch); err != nil {
+		return fmt.Errorf("failed to checkout %s branch: %w", defaultBranch, err)
 	}
 
 	// Pull latest changes
@@ -163,11 +174,21 @@ func (wm *WorkflowManager) pullLatest() error {
 // CreateStoryBranch creates a new story branch from the main branch
 func (wm *WorkflowManager) CreateStoryBranch(storyID string, description string) error {
 	// Format the branch name
-	branchName := fmt.Sprintf("feat/W-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
+	var branchName string
+	if description != "" {
+		branchName = fmt.Sprintf("W-%s-%s", storyID, strings.ToLower(strings.ReplaceAll(description, " ", "-")))
+	} else {
+		branchName = fmt.Sprintf("W-%s", storyID)
+	}
 
 	// Ensure we're on main branch
-	if err := wm.checkoutBranch("main"); err != nil {
-		return fmt.Errorf("failed to checkout main branch: %w", err)
+	defaultBranch, err := wm.getDefaultBranch()
+	if err != nil {
+		return err
+	}
+
+	if err := wm.checkoutBranch(defaultBranch); err != nil {
+		return fmt.Errorf("failed to checkout %s branch: %w", defaultBranch, err)
 	}
 
 	// Pull latest changes
@@ -221,6 +242,21 @@ func (wm *WorkflowManager) PushStoryBranch() error {
 	return nil
 }
 
+// validateBranchName checks if the branch name follows the convention
+func (wm *WorkflowManager) validateBranchName(branchName string) error {
+	if !strings.HasPrefix(branchName, "W-") {
+		return fmt.Errorf("branch name must follow the format: W-STORY_ID (e.g., W-123)")
+	}
+
+	// Check if there's a story ID after the "W-" prefix
+	parts := strings.SplitN(branchName[2:], "-", 2) // Skip "W-" prefix and split the rest
+	if len(parts) == 0 || parts[0] == "" {
+		return fmt.Errorf("branch name must include a story ID")
+	}
+
+	return nil
+}
+
 // CreateFeatureBranch creates a new feature branch from the main branch
 func (wm *WorkflowManager) CreateFeatureBranch(branchName string) error {
 	// Validate branch name format
@@ -238,10 +274,10 @@ func (wm *WorkflowManager) CreateFeatureBranch(branchName string) error {
 		return fmt.Errorf("failed to pull latest changes: %w", err)
 	}
 
-	// Create and checkout new feature branch
+	// Create and checkout new branch
 	cmd := exec.Command("git", "checkout", "-b", branchName)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to create feature branch: %w", err)
+		return fmt.Errorf("failed to create branch: %w", err)
 	}
 
 	return nil
@@ -271,34 +307,6 @@ func (wm *WorkflowManager) GetCurrentBranch() (string, error) {
 		return "", fmt.Errorf("failed to get current branch: %w", err)
 	}
 	return strings.TrimSpace(string(output)), nil
-}
-
-// validateBranchName checks if the branch name follows the convention
-func (wm *WorkflowManager) validateBranchName(branchName string) error {
-	parts := strings.Split(branchName, "/")
-	if len(parts) != 2 {
-		return fmt.Errorf("branch name must follow the format: type/description (e.g., feat/login-button)")
-	}
-
-	branchType := BranchType(parts[0])
-	switch branchType {
-	case Feature, Bugfix, Chore:
-		// Valid branch type
-	default:
-		return fmt.Errorf("invalid branch type: %s. Must be one of: feat, bugfix, chore", branchType)
-	}
-
-	if parts[1] == "" {
-		return fmt.Errorf("branch description cannot be empty")
-	}
-
-	return nil
-}
-
-// CreateBranchWithType creates a new branch with the specified type and description
-func (wm *WorkflowManager) CreateBranchWithType(branchType BranchType, description string) error {
-	branchName := fmt.Sprintf("%s/%s", branchType, description)
-	return wm.CreateFeatureBranch(branchName)
 }
 
 // UndoLastCommit undoes the last commit, keeping changes in working directory
@@ -367,12 +375,15 @@ func (wm *WorkflowManager) GetLastCommitHash() (string, error) {
 
 // PrintExample prints out an end-to-end example of the git workflow
 func (wm *WorkflowManager) PrintExample() {
-	fmt.Println(`
+	fmt.Print(`
 End-to-End Git Workflow Example
 ==============================
 
-1. Start a new story:
+1. Start a new story (with description):
    vamosGitWF story-start --id "123" --description "add-user-authentication"
+
+   Or without description:
+   vamosGitWF story-start --id "123"
 
 2. Make some changes and commit them:
    vamosGitWF story-commit --scope "auth" --description "implement basic login flow"
@@ -397,7 +408,7 @@ End-to-End Git Workflow Example
 
 9. If you need to revert to a previous tag:
     git checkout v1.0.0  # Checkout the tag
-    vamosGitWF story-start --id "124" --description "fix-regression"  # Create a new branch from the tag
+    vamosGitWF story-start --id "124"  # Create a new branch from the tag
 
 10. Push your changes to remote:
     vamosGitWF story-push
